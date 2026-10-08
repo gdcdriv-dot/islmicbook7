@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <title>ইসলামিক বুক</title>
+    <!-- FontAwesome আইকন লাইব্রেরি -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- HLS.js for Live TV Support -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Hind Siliguri', sans-serif; }
+        
+        /* ================= ১০০% ফিক্সড মোবাইল অ্যাপ লেআউট (দুই পাশের দাগ সরানো হয়েছে) ================= */
+        body { 
+            background: #000000; color: #ffffff; 
+            height: 100vh; height: 100dvh; width: 100vw; 
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden; margin: 0;
+        }
+
+        .app-container {
+            width: 100%; max-width: 100%; height: 100%; /* max-width 100% করায় দুই পাশের কালো দাগ চলে গেছে */
+            background-color: #011810; position: relative;
+            display: flex; flex-direction: column;
+            border: none; /* সব ধরনের বর্ডার মুছে দেওয়া হয়েছে */
+            overflow: hidden;
+        }
+
+        /* নতুন হেডার ডিজাইন (লোগো এবং সোশ্যাল আইকন সহ) */
+        .header {
+            flex-shrink: 0;
+            background-color: #022a1c; color: #d4af37;
+            padding: 10px 15px; z-index: 10;
+            border-bottom: 1px solid #054f35;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 10px; font-size: 19px; font-weight: bold; }
+        .header-logo { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid #d4af37; }
+        
+        .header-right { display: flex; gap: 15px; align-items: center; }
+        .header-right a { color: #d4af37; font-size: 18px; text-decoration: none; transition: 0.2s; }
+        .header-right a:active { transform: scale(0.85); }
+
+        .content { 
+            flex-grow: 1; overflow-y: auto; padding: 15px; 
+            padding-bottom: 90px; position: relative; 
+            -webkit-overflow-scrolling: touch;
+        }
+        .content::-webkit-scrollbar { display: none; }
+
+        .bottom-nav {
+            flex-shrink: 0; height: 65px; background: #022a1c;
+            display: flex; justify-content: space-around; align-items: center;
+            border-top: 1px solid #054f35; z-index: 1000;
+        }
+
+        /* ================= ভিউ ও কার্ড ডিজাইন ================= */
+        .main-view { display: none; animation: fadeIn 0.3s ease; }
+        .main-view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .category-card, .list-item {
+            background: #022a1c; padding: 12px 15px; border-radius: 10px;
+            margin-bottom: 12px; display: flex; align-items: center;
+            border: 1px solid #054f35; cursor: pointer; transition: 0.2s;
+        }
+        .category-card:active, .list-item:active { transform: scale(0.98); border-color: #d4af37; background: rgba(212, 175, 55, 0.2); }
+        
+        .category-icon, .list-thumbnail { width: 60px; height: 80px; border-radius: 8px; object-fit: cover; margin-right: 15px; border: 1px solid #d4af37; }
+        .category-info h4, .list-details .title { font-size: 15px; color: #ffffff; font-weight: bold; margin-bottom: 3px; }
+        .category-info p, .list-details .subtitle { font-size: 12px; color: #d4af37; }
+        .arrow-icon, .click-icon { margin-left: auto; color: #d4af37; font-size: 18px; }
+        .list-number { background: #d4af37; color: #022a1c; min-width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 13px; margin-right: 12px; }
+
+        .inner-header { display: flex; align-items: center; margin-bottom: 15px; color: #d4af37; cursor: pointer; font-weight: bold; font-size: 16px; border-bottom: 1px solid #054f35; padding-bottom: 10px; }
+        .inner-header i { font-size: 18px; margin-right: 8px; }
+
+        .tv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; padding-bottom: 30px; }
+        .channel-card { background: #022a1c; border-radius: 10px; padding: 10px 5px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid #054f35; }
+        .channel-card:active { border-color: #d4af37; }
+        .tv-icon img { width: 60px; height: 60px; object-fit: contain; border-radius: 8px; margin-bottom: 5px; border: 1px solid #d4af37; }
+        .channel-name { font-size: 11px; font-weight: bold; text-align: center; color: #fff; }
+
+        /* ================= মিনি অডিও প্লেয়ার ================= */
+        .player-popup {
+            position: absolute; bottom: 65px; left: 0; width: 100%; background: #022a1c;
+            padding: 10px 15px; display: flex; align-items: center; box-shadow: 0 -4px 15px rgba(0,0,0,0.8);
+            border-top: 1px solid #054f35; cursor: pointer; z-index: 500;
+            visibility: hidden; opacity: 0; pointer-events: none; 
+            transform: translateY(100%); transition: all 0.4s ease-in-out;
+        }
+        .player-popup.active { visibility: visible; opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .player-popup img { width: 40px; height: 60px; border-radius: 4px; object-fit: cover; border: 1px solid #d4af37; }
+        .player-info { flex: 1; padding-left: 12px; overflow: hidden; }
+        .player-info h4 { font-size: 14px; color: #fff; white-space: nowrap; text-overflow: ellipsis; }
+        .player-info p { font-size: 11px; color: #d4af37; }
+        .player-controls { display: flex; align-items: center; gap: 15px; }
+        .player-controls i { font-size: 26px; color: #d4af37; cursor: pointer; }
+
+        /* ================= ফুলস্ক্রিন MP3 প্লেয়ার ================= */
+        .full-player {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #022a1c 0%, #04432d 100%); z-index: 2000;
+            display: flex; flex-direction: column; padding: 25px;
+            visibility: hidden; opacity: 0; pointer-events: none;
+            transform: translateY(100%); transition: all 0.4s ease-in-out;
+        }
+        .full-player.active { visibility: visible; opacity: 1; pointer-events: auto; transform: translateY(0); }
+        
+        .fp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; margin-top: 15px; }
+        .fp-header i { font-size: 24px; color: #d4af37; cursor: pointer; padding: 5px; }
+        .fp-cover { width: 200px; height: 280px; border-radius: 15px; margin: 0 auto 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); object-fit: cover; border: 2px solid #d4af37; }
+        .fp-info { text-align: center; margin-bottom: 20px; }
+        .fp-info h2 { font-size: 20px; color: #fff; margin-bottom: 5px; }
+        .fp-info p { font-size: 14px; color: #d4af37; }
+        
+        .progress-container { display: flex; align-items: center; justify-content: space-between; color: #d4af37; font-size: 12px; margin-bottom: 30px; }
+        #progress-bar { flex: 1; margin: 0 15px; cursor: pointer; accent-color: #d4af37; height: 6px; }
+        
+        .fp-controls-main { display: flex; justify-content: center; align-items: center; gap: 35px; margin-top: 20px; }
+        .fp-controls-main i { font-size: 35px; color: #d4af37; cursor: pointer; }
+        .fp-controls-main .fa-play-circle, .fp-controls-main .fa-pause-circle { font-size: 65px; }
+
+        /* ================= ইন-অ্যাপ PDF রিডার (জুম সাপোর্ট) ================= */
+        .pdf-viewer-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #011810; z-index: 3000; display: none; flex-direction: column; }
+        .pdf-viewer-screen.active { display: flex; }
+        .pdf-header { background: #022a1c; color: #d4af37; padding: 15px; display: flex; align-items: center; font-size: 16px; border-bottom: 1px solid #054f35; font-weight: bold; }
+        .pdf-header i { font-size: 18px; margin-right: 12px; cursor: pointer; }
+        .pdf-frame { flex: 1; width: 100%; border: none; background: #fff; }
+
+        /* ন্যাভ আইটেম স্টাইল */
+        .nav-item { text-align: center; color: #054f35; flex: 1; cursor: pointer; padding: 10px 0; transition: 0.2s; }
+        .nav-item.active { color: #d4af37; }
+        .nav-item i { font-size: 20px; display: block; margin-bottom: 4px; }
+        .nav-item span { font-size: 12px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <!-- নতুন হেডার ডিজাইন -->
+    <div class="header">
+        <div class="header-left">
+            <!-- অটোমেটিক লোগো -->
+            <img src="https://files.catbox.moe/maeume.png" alt="Logo" class="header-logo">
+            <span>ইসলামিক বুক</span>
+        </div>
+        <div class="header-right">
+            <!-- আপনার সোশ্যাল লিংকগুলো এখানে বসান -->
+            <a href="#" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+            <a href="#" target="_blank"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="#" target="_blank"><i class="fa-brands fa-youtube"></i></a>
+        </div>
+    </div>
+
+    <div class="content">
+
+        <!-- ================= ১. বইয়ের মূল সেকশন ================= -->
+        <div id="view-book" class="main-view active">
+            <div id="main-category-list">
+                <h3 style="margin-bottom:12px; color:#d4af37; font-size: 15px;">বইয়ের প্রধান ক্যাটাগরি</h3>
+                
+                <div class="category-card" onclick="openSubCategory('tafsir')">
+                    <img src="https://i.ibb.co/YFpj22rv/download-3.jpg" class="category-icon" alt="Tafsir">
+                    <div class="category-info"><h4>আল কুরআন তাফসীর বাংলা</h4><p>তাফসীর গ্রন্থ সমূহ</p></div>
+                    <i class="fas fa-chevron-right arrow-icon"></i>
+                </div>
+                <div class="category-card" onclick="openSubCategory('hadith')">
+                    <img src="https://i.ibb.co/GvNgMJzP/download-4.jpg" class="category-icon" alt="Hadith">
+                    <div class="category-info"><h4>আল হাদিস</h4><p>হাদিস ও অন্যান্য গ্রন্থ</p></div>
+                    <i class="fas fa-chevron-right arrow-icon"></i>
+                </div>
+                <div class="category-card" onclick="openSubCategory('aqida2')">
+                    <img src="https://files.catbox.moe/2y0anz.jpg" class="category-icon" alt="Aqida2">
+                    <div class="category-info"><h4>নবীদের জীবন কাহিনী</h4><p>নবীদের জীবন কাহিনী</p></div>
+                    <i class="fas fa-chevron-right arrow-icon"></i>
+                </div>
+                <div class="category-card" onclick="openSubCategory('alem')">
+                    <img src="https://i.ibb.co/ycjLnLYX/download-1.jpg" class="category-icon" alt="Alem">
+                    <div class="category-info"><h4>আলেমগণের কিতাব বই</h4><p>প্রখ্যাত আলেমগণের কিতাব</p></div>
+                    <i class="fas fa-chevron-right arrow-icon"></i>
+                </div>
+                
+                
+                <div class="category-card" onclick="openSubCategory('new')">
+                    <img src="https://files.catbox.moe/27e6wx.jpg" class="category-icon" alt="New">
+                    <div class="category-info"><h4>নতুন বই ক্যাটাগরি</h4><p>নতুন সংযোজিত বইসমূহ</p></div>
+                    <i class="fas fa-chevron-right arrow-icon"></i>
+                </div>
+                
+                <div class="category-card" onclick="openSubCategory('history')">
+                    <img src="https://i.ibb.co/bjSrY9nj/download.jpg" class="category-icon" alt="History">
+                    <div class="category-info"><h4>ইসলামিক ইতিহাস</h4><p>ঐতিহাসিক গ্রন্থ</p></div>
+                    <i class="fas fa-chevron-right arrow-icon"></i>
+                </div>
+                <div class="category-card" onclick="openSubCategory('aqida')">
+                    <img src="https://i.ibb.co/bR7V6g6x/download-2.jpg" class="category-icon" alt="Aqida">
+                    <div class="category-info"><h4>আকীদা ও ফিকহ</h4><p>মাসআলা বিষয়ক বই</p></div>
+                    <i class="fas fa-chevron-right arrow-icon"></i>
+                </div>
+            </div>
+
+            <!-- সাব-লিস্ট -->
+            <div id="sub-list-container" style="display:none;">
+                <div class="inner-header" onclick="backToMainCategory()">
+                    <i class="fas fa-arrow-left"></i> <span id="sub-list-title">ক্যাটাগরি লিস্ট</span>
+                </div>
+                <div id="sub-list-render-area"></div>
+            </div>
+
+            <!-- বইয়ের পিডিএফ লিস্ট -->
+            <div id="books-list-container" style="display:none;">
+                <div class="inner-header" onclick="backToSubCategory()">
+                    <i class="fas fa-arrow-left"></i> <span id="book-author-title">বইসমূহ</span>
+                </div>
+                <div id="books-render-area"></div>
+            </div>
+        </div>
+
+        <!-- ================= ২. অডিও কুরআন সেকশন ================= -->
+        <div id="view-audio" class="main-view">
+            <div id="audio-main-list">
+                <h3 style="margin-bottom:12px; color:#d4af37; font-size: 15px;">তেলাওয়াতকারী নির্বাচন করুন</h3>
+                
+                <div class="category-card" onclick="openAudioSub('mishary', 'বাংলা অডিও কোরআন')">
+                    <img src="https://i.ibb.co/wFwj3F0B/image.png" class="category-icon" alt="Mishary">
+                    <div class="category-info"><h4>বাংলা অডিও কোরআন</h4><p>১১৪ সূরা সম্পূর্ণ তেলাওয়াত</p></div>
+                    <i class="fas fa-chevron-right arrow-icon"></i>
+                </div>
+                <div class="category-card" onclick="openAudioSub('Afasy', 'মিশারি রশিদ আলআফাসি')">
+                    <img src="https://i.ibb.co/VWB2qHvG/download-5.jpg" class="category-icon" alt="Mishari-Rashid-al-Afasy">
+                    <div class="category-info"><h4>মিশারি রশিদ আলআফাসি</h4><p>সূরা তেলাওয়াত</p></div>
+                    <i class="fas fa-chevron-right arrow-icon"></i>
+                </div>
+                <div class="category-card" onclick="openAudioSub('abdulbasit', 'আব্দুল বাসেত সামাদ')">
+                    <img src="https://files.catbox.moe/i89c2w.jpg" class="category-icon" alt="Abdul Basit">
+                    <div class="category-info"><h4>আব্দুল বাসেত সামাদ</h4><p>৪টি সূরা তেলাওয়াত</p></div>
+                    <i class="fas fa-chevron-right arrow-icon"></i>
+                </div>
+                <div class="category-card" onclick="openAudioSub('maher', 'মাসের আল মুয়াইকিলি')">
+                    <img src="https://files.catbox.moe/wcen05.png" class="category-icon" alt="Maher">
+                    <div class="category-info"><h4>মাসের আল মুয়াইকিলি</h4><p>৪টি সূরা তেলাওয়াত</p></div>
+                    <i class="fas fa-chevron-right arrow-icon"></i>
+                </div>
+                <div class="category-card" onclick="openAudioSub('minshawi', 'মুহাম্মদ সিদ্দিক আল-মিনশাবি')">
+                    <img src="https://files.catbox.moe/27e6wx.jpg" class="category-icon" alt="Minshawi">
+                    <div class="category-info"><h4>মুহাম্মদ সিদ্দিক আল-মিনশাবি</h4><p>৪টি সূরা তেলাওয়াত</p></div>
+                    <i class="fas fa-chevron-right arrow-icon"></i>
+                </div>
+            </div>
+
+            <!-- অডিও সূরার লিস্ট -->
+            <div id="audio-sub-container" style="display:none;">
+                <div class="inner-header" onclick="backToAudioMain()">
+                    <i class="fas fa-arrow-left"></i> <span>সূরার লিস্ট</span>
+                </div>
+                <div style="background:#022a1c; border:1px solid #d4af37; padding:10px; border-radius:8px; text-align:center; margin-bottom:15px;">
+                    <h4 style="color:#d4af37; margin-bottom:5px;">আল কুরআন তেলাওয়াত</h4>
+                    <p id="reciter-name-display" style="font-size:13px; color:#fff; font-weight:bold;"></p>
+                </div>
+                <div id="audio-render-area"></div>
+            </div>
+        </div>
+
+        <!-- ================= ৩. লাইভ টিভি সেকশন ================= -->
+        <div id="view-tv" class="main-view">
+            <h3 style="margin-bottom:12px; color:#d4af37; font-size: 15px;">ইসলামিক লাইভ টিভি চ্যানেল</h3>
+            <div class="tv-grid" id="channels-container"></div>
+        </div>
+    </div>
+
+    <!-- ================= মিনি অডিও প্লেয়ার ================= -->
+    <div class="player-popup" id="player-popup" onclick="openExpandedPlayer()">
+        <img id="mini-cover" src="https://i.ibb.co/wFwj3F0B/image.png" alt="Quran">
+        <div class="player-info">
+            <h4 id="mini-title">সূরা আল-ফাতিহা</h4>
+            <p id="mini-author">ক্বারী</p>
+        </div>
+        <div class="player-controls">
+            <audio id="main-audio" src=""></audio>
+            <i id="play-btn" class="fas fa-play-circle" onclick="togglePlay(event)"></i>
+            <i class="fas fa-chevron-up" title="বড় করুন"></i>
+        </div>
+    </div>
+
+    <!-- ================= ফুলস্ক্রিন MP3 প্লেয়ার ================= -->
+    <div class="full-player" id="full-player">
+        <div class="fp-header">
+            <i class="fas fa-chevron-down" onclick="closeExpandedPlayer(event)"></i>
+            <span>অডিও প্লেয়ার</span>
+            <i class="fas fa-ellipsis-v" style="opacity:0;"></i>
+        </div>
+        <img id="fp-cover" src="https://i.ibb.co/wFwj3F0B/image.png" alt="Quran" class="fp-cover">
+        <div class="fp-info">
+            <h2 id="fp-title">সূরা আল-ফাতিহা</h2>
+            <p id="fp-author">ক্বারী</p>
+        </div>
+        
+        <div class="progress-container">
+            <span id="current-time">0:00</span>
+            <input type="range" id="progress-bar" value="0" min="0" max="100">
+            <span id="total-time">0:00</span>
+        </div>
+
+        <div class="fp-controls-main">
+            <i class="fas fa-step-backward" onclick="playPrevTrack()"></i>
+            <i id="fp-play-btn" class="fas fa-play-circle" onclick="togglePlay(event)"></i>
+            <i class="fas fa-step-forward" onclick="playNextTrack()"></i>
+        </div>
+    </div>
+
+    <!-- ================= ইন-অ্যাপ PDF রিডার ================= -->
+    <div class="pdf-viewer-screen" id="pdf-viewer-screen">
+        <div class="pdf-header">
+            <i class="fas fa-arrow-left" onclick="closePDF()"></i>
+            <span id="pdf-viewer-title">বইয়ের নাম</span>
+        </div>
+        <iframe id="pdf-iframe" class="pdf-frame" src=""></iframe>
+    </div>
+
+    <!-- ================= নিচের মেনুবার ================= -->
+    <div class="bottom-nav">
+        <div class="nav-item" onclick="switchMainView('view-audio', this)">
+            <i class="fas fa-headphones"></i>
+            <span>অডিও</span>
+        </div>
+        <div class="nav-item" onclick="switchMainView('view-tv', this)">
+            <i class="fas fa-tv"></i>
+            <span>লাইভ টিভি</span>
+        </div>
+        <div class="nav-item active" onclick="switchMainView('view-book', this)">
+            <i class="fas fa-book-open"></i>
+            <span>বই</span>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // =========================================================================
+    // মোবাইলের ব্যাক বাটন (Hardware Back Button) লজিক: ইনফিনিট ট্র্যাপ লুপ 
+    // =========================================================================
+    
+    // অ্যাপ ওপেন হওয়ার সাথে সাথেই একটি ট্র্যাপ সেট করা হলো যাতে ইউজার ব্যাক বাটন দিয়ে বের হতে না পারে
+    window.addEventListener("load", function() {
+        history.pushState(null, null, window.location.href);
+    });
+
+    // কেউ ব্যাক বাটন চাপলে এই ফাংশনটি কল হবে
+    window.addEventListener("popstate", function(e) {
+        // বের হওয়া আটকাতে সাথে সাথেই আবার ট্র্যাপ সেট করা হলো
+        history.pushState(null, null, window.location.href);
+        // এরপর আমাদের নিজস্ব ব্যাক বাটনের কাজ করা হলো
+        handleBackButton();
+    });
+
+    // সব জায়গার (UI এবং Hardware) ব্যাক বাটন এক জায়গা থেকে কন্ট্রোল করার ফাংশন
+    function handleBackButton() {
+        // ১. যদি PDF ভিউয়ার খোলা থাকে, তাহলে সেটা বন্ধ হবে
+        if (document.getElementById('pdf-viewer-screen').classList.contains('active')) {
+            document.getElementById('pdf-viewer-screen').classList.remove('active');
+            document.getElementById('pdf-iframe').src = "";
+            return;
+        }
+        // ২. যদি ফুলস্ক্রিন অডিও প্লেয়ার খোলা থাকে, তাহলে সেটা বন্ধ হবে
+        if (document.getElementById('full-player').classList.contains('active')) {
+            document.getElementById('full-player').classList.remove('active');
+            return;
+        }
+        // ৩. যদি বইয়ের পিডিএফ লিস্ট খোলা থাকে, তাহলে সাব-ক্যাটাগরিতে ফিরে যাবে
+        if (document.getElementById('books-list-container').style.display === 'block') {
+            document.getElementById('books-list-container').style.display = 'none';
+            document.getElementById('sub-list-container').style.display = 'block';
+            return;
+        }
+        // ৪. যদি সাব-ক্যাটাগরি লিস্ট খোলা থাকে, তাহলে মেইন ক্যাটাগরিতে ফিরে যাবে
+        if (document.getElementById('sub-list-container').style.display === 'block') {
+            document.getElementById('sub-list-container').style.display = 'none';
+            document.getElementById('main-category-list').style.display = 'block';
+            return;
+        }
+        // ৫. যদি অডিও সূরার লিস্ট খোলা থাকে, তাহলে অডিওর মেইন পেজে ফিরে যাবে
+        if (document.getElementById('audio-sub-container').style.display === 'block') {
+            document.getElementById('audio-sub-container').style.display = 'none';
+            document.getElementById('audio-main-list').style.display = 'block';
+            return;
+        }
+        
+        // ৬. যদি উপরের কোনোটিই খোলা না থাকে (অর্থাৎ ইউজার মেইন হোম পেজে আছে)
+        // তখন অ্যাপ না কেটে পেজ শিফট করা হবে: Book -> TV -> Audio -> Book ...
+        let activeView = document.querySelector('.main-view.active').id;
+        let navs = document.getElementsByClassName('nav-item');
+        if (activeView === 'view-book') {
+            switchMainView('view-tv', navs[1]);
+        } else if (activeView === 'view-tv') {
+            switchMainView('view-audio', navs[0]);
+        } else if (activeView === 'view-audio') {
+            switchMainView('view-book', navs[2]);
+        }
+    }
+
+    // =========================================================================
+    // নিচের মেনু কন্ট্রোল
+    // =========================================================================
+    function switchMainView(viewId, element) {
+        var views = document.getElementsByClassName('main-view');
+        for(var i = 0; i < views.length; i++) {
+            views[i].classList.remove('active');
+        }
+        document.getElementById(viewId).classList.add('active');
+
+        var navs = document.getElementsByClassName('nav-item');
+        for(var j = 0; j < navs.length; j++) {
+            navs[j].classList.remove('active');
+        }
+        
+        if (element) {
+            element.classList.add('active');
+        } else {
+            if(viewId === 'view-audio') navs[0].classList.add('active');
+            else if(viewId === 'view-tv') navs[1].classList.add('active');
+            else if(viewId === 'view-book') navs[2].classList.add('active');
+        }
+
+        if(viewId === 'view-book') {
+            document.getElementById('main-category-list').style.display = 'block';
+            document.getElementById('sub-list-container').style.display = 'none';
+            document.getElementById('books-list-container').style.display = 'none';
+        } else if(viewId === 'view-audio') {
+            document.getElementById('audio-main-list').style.display = 'block';
+            document.getElementById('audio-sub-container').style.display = 'none';
+        }
+    }
+
+    // =========================================================================
+    // ১. বইয়ের ডেটাবেস 
+    // =========================================================================
+    const dbAlem = [
+        { cName: 'ইমাম ইবনে তাইমিয়া', cDesc: '#', cIcon: 'https://files.catbox.moe/r4vcxt.jpg', books: [ { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, ] },
+        { cName: 'নাসির উদ্দিন আলবানী', cDesc: '#', cIcon: 'https://files.catbox.moe/g7ab3k.jpg', books: [ { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, ] },
+        { cName: 'ড. আসাদুল্লাহ আল-গালিব', cDesc: '#', cIcon: 'https://files.catbox.moe/9frr9q.jpg', books: [ { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, ] },
+        { cName: 'আব্দুল আযীয বিন বায', cDesc: '#', cIcon: 'https://files.catbox.moe/2jy0ut.png', books: [ { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, ] },
+        { cName: 'ইমাম বাইহাকী', cDesc: '#', cIcon: 'https://files.catbox.moe/mt8mrt.jpg', books: [ { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, ] },
+        { cName: 'ড. খন্দকার জাহাঙ্গীর', cDesc: '#', cIcon: 'https://i.ibb.co/RGphSHzY/image-1785493669892.png', books: [ { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, ] },
+        { cName: 'ড. মুজাফফর বিন মহসিন', cDesc: '#', cIcon: 'https://files.catbox.moe/t6l996.jpg', books: [ { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, ] },
+        { cName: 'আব্দুর রাজ্জাক বিন ইউসুফ', cDesc: '#', cIcon: 'https://files.catbox.moe/65m73s.jpg', books: [ { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, ] },
+        { cName: 'কাজী মুহাম্মদ ইব্রাহিম', cDesc: '#', cIcon: 'https://files.catbox.moe/6hk9rv.png', books: [ { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, ] },
+        { cName: 'ব্রাদার রাহুল হোসেন', cDesc: '#', cIcon: 'https://files.catbox.moe/cwtz6k.jpg', books: [ { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, ] },
+        { cName: 'নোমান আলী খান', cDesc: '#', cIcon: 'https://i.ibb.co/9m51gghv/image-1785494687958.png', books: [ { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, ] },
+        { cName: 'মিজানুর রহমান আজহারী', cDesc: '#', cIcon: 'https://files.catbox.moe/ew638s.png', books: [ { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, { bTitle: 't', bImg: '#', bPdf: '#' }, ] },
+    ];
+  
+    const dbHadith = [
+        { cName: 'সহীহ বুখারী', cDesc: 'তাওহীদ পাবলিকেশন', cIcon: 'https://files.catbox.moe/fducpy.png', books: [ { bTitle: 'সহীহ বুখারী( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: 'সহীহ বুখারী (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'সহীহ বুখারী(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'সহীহ বুখারী ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: 'সহীহ বুখারী(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'সহীহ বুখারী(৬ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+        { cName: 'সহীহ বুখারী', cDesc: 'ইসলামিক ফাউন্ডেশন', cIcon: 'https://files.catbox.moe/3qu0l3.png', books: [ { bTitle: 'সহীহ বুখারী( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: 'সহীহ বুখারী (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'সহীহ বুখারী(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'সহীহ বুখারী ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: 'সহীহ বুখারী(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'সহীহ বুখারী(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'সহীহ বুখারী( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: 'সহীহ বুখারী (৮ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'সহীহ বুখারী(৯ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'সহীহ বুখারী ( ১০ খণ্ড)', bImg: '২', bPdf: '২' }, ] },
+        { cName: 'সহীহ মুসলিম', cDesc: 'ইসলামিক ফাউন্ডেশন', cIcon: 'https://files.catbox.moe/1j930s.png', books: [ { bTitle: 'সহীহ মুসলিম( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: 'সহীহ মুসলিম (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'সহীহ মুসলিম(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'সহীহ মুসলিম ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: 'সহীহ মুসলিম(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'সহীহ মুসলিম(৬ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+        { cName: 'সহীহ মুসলিম', cDesc: 'বাংলাদেশী ইসলামিক সেন্টার', cIcon: 'https://files.catbox.moe/o4rp1d.png', books: [ { bTitle: 'সহীহ মুসলিম( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: 'সহীহ মুসলিম (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'সহীহ মুসলিম(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'সহীহ মুসলিম ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: 'সহীহ মুসলিম(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'সহীহ মুসলিম(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'সহীহ মুসলিম( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: 'সহীহ মুসলিম (৮ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+        { cName: 'আবু দাউদ শরীফ', cDesc: 'ইসলামিক ফাউন্ডেশন', cIcon: 'https://files.catbox.moe/k86xsw.jpeg', books: [ { bTitle: 'আবু দাউদ শরীফ( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: 'আবু দাউদ শরীফ (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'আবু দাউদ শরীফ(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'আবু দাউদ শরীফ ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: 'আবু দাউদ শরীফ(৫ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+        { cName: 'আবু দাউদ শরীফ', cDesc: ' মোঃ জিল্লুর রহমান জিলানী', cIcon: 'https://files.catbox.moe/vgcufd.jpg', books: [ { bTitle: '(আবু দাউদ শরীফ ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: 'আবু দাউদ শরীফ(২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'আবু দাউদ শরীফ(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: 'আবু দাউদ শরীফ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: 'আবু দাউদ শরীফ(৫ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+        { cName: 'মিশকাতুল মাসাবীহ', cDesc: '২', cIcon: 'https://files.catbox.moe/gpoo5x.png', books: [ { bTitle: '( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (৮ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৯ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ১০ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(১১ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(১২ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+        { cName: 'সুনান আত-তিরমিজী', cDesc: '২', cIcon: 'https://files.catbox.moe/efzte3.png', books: [ { bTitle: '( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (৮ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৯ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ১০ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(১১ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(১২ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+        { cName: 'সুনান নাসাঈ শরীফ', cDesc: '২', cIcon: 'https://files.catbox.moe/86baj6.png', books: [ { bTitle: '( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (৮ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৯ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ১০ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(১১ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(১২ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+        { cName: 'সুনান ইবনু মাজাহ', cDesc: '২', cIcon: 'https://files.catbox.moe/5nxgmi.png', books: [ { bTitle: '( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (৮ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৯ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ১০ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(১১ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(১২ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+        { cName: 'সুনান আদ-দারাকুতনী', cDesc: '২', cIcon: 'https://files.catbox.moe/op7nvh.jpg', books: [ { bTitle: '( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (৮ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৯ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ১০ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(১১ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(১২ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+        { cName: 'মুয়াত্তা-ইমাম-মালিক', cDesc: '২', cIcon: 'https://files.catbox.moe/62we4l.jpg', books: [ { bTitle: '( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (৮ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৯ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ১০ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(১১ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(১২ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+        { cName: 'আল বিদায়া ওয়ান-নিহায়া', cDesc: '২', cIcon: 'https://files.catbox.moe/9fixog.jpg', books: [ { bTitle: '( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (৮ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৯ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ১০ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(১১ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(১২ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+    ];
+
+    const dbNew = [
+        { cName: 'দোয়া ও জিকির', cDesc: '1', cIcon: 'https://files.catbox.moe/27e6wx.jpg', books: [ { bTitle: '( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (৮ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৯ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ১০ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(১১ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(১২ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+        { cName: 'সালাত নামাজ', cDesc: '1', cIcon: 'https://files.catbox.moe/yzryuh.jpg', books: [ { bTitle: '( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (৮ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৯ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ১০ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(১১ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(১২ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+        { cName: 'হজ্জ ও উমরাহ', cDesc: '1', cIcon: 'https://files.catbox.moe/5ra0os.jpg', books: [ { bTitle: '( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (৮ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৯ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ১০ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(১১ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(১২ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+        { cName: 'রমজানের সিয়াম ও রোজা', cDesc: '1', cIcon: 'https://files.catbox.moe/gnsc92.jpg', books: [ { bTitle: '( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (৮ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৯ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ১০ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(১১ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(১২ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+        { cName: 'ঈদুল আযহার ঈদ-উল-ফিতর নামাজ', cDesc: '1', cIcon: 'https://files.catbox.moe/fh50pm.jpg', books: [ { bTitle: '( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (৮ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৯ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ১০ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(১১ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(১২ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+        { cName: 'জ্বিন ও শয়তান ঝাড় ফুক', cDesc: '1', cIcon: 'https://files.catbox.moe/vwcxhd.jpg', books: [ { bTitle: '( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (৮ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৯ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ১০ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(১১ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(১২ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+        { cName: 'তকদীর কি', cDesc: '1', cIcon: '2', books: [ { bTitle: '( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (৮ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৯ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ১০ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(১১ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(১২ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+        { cName: 'তবলীগ জামাতের গোমর ফাস', cDesc: '1', cIcon: 'https://archive.org/download/20260804_20260804_0956/1585394349852316-4_thumb.jpg', books: [ { bTitle: '( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (৮ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৯ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ১০ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(১১ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(১২ খণ্ড)', bImg: '২', bPdf: '#' }, ] },    
+  ];
+
+   const dbTafsir = [
+        { cName: 'তাফসীর ইবনে কাসীর', cDesc: 'কুরআনের তাফসীর', cIcon: 'https://i.ibb.co/ch8K9fZ3/image-1785496321794.jpg', books: [ { bTitle: 'তাফসীর ইবনে কাসীর (১-২-৩ খণ্ড)', bImg: 'https://i.ibb.co/ch8K9fZ3/image-1785496321794.jpg', bPdf: 'https://drive.google.com/file/d/1M1XqXNCi14vpnDt5_wf0N-CSbLnPpXou/view?usp=drivesdk' }, { bTitle: 'তাফসীর ইবনে কাসীর ( ৪-৫-৬-৭ খণ্ড)', bImg: 'https://i.ibb.co/ch8K9fZ3/image-1785496321794.jpg', bPdf: 'https://drive.google.com/file/d/1GYqY1GkY1IxgXXemHXKcUWFrtfBCSCRf/view?usp=drivesdk' }, { bTitle: 'তাফসীর ইবনে কাসীর (৮-৯-১০-১১ খণ্ড)', bImg: 'https://i.ibb.co/ch8K9fZ3/image-1785496321794.jpg', bPdf: 'https://drive.google.com/file/d/1_kG94yal4VogviCippMM1SQ1YQIbHdaT/view?usp=drivesdk' }, { bTitle: 'তাফসীর ইবনে কাসীর (১২ খণ্ড)', bImg: 'https://i.ibb.co/ch8K9fZ3/image-1785496321794.jpg', bPdf: 'https://drive.google.com/file/d/1YA23VHpb0EaZ6AmzMX0CvjfSUVDkFWEw/view?usp=drivesdk' }, { bTitle: 'তাফসীর ইবনে কাসীর (১৩ খণ্ড)', bImg: 'https://i.ibb.co/ch8K9fZ3/image-1785496321794.jpg', bPdf: 'https://drive.google.com/file/d/1HTYbhCwj16bKJE1IsiUHK9BmHJgLvRDr/view?usp=drivesdk' }, { bTitle: 'তাফসীর ইবনে কাসীর (১৪ খণ্ড)', bImg: 'https://i.ibb.co/ch8K9fZ3/image-1785496321794.jpg', bPdf: 'https://drive.google.com/file/d/1Z3vTAIc2-A4cQjvbATh6cx-6GYppJYqG/view?usp=drivesdk' }, { bTitle: 'তাফসীর ইবনে কাসীর (১৫ খণ্ড)', bImg: 'https://i.ibb.co/ch8K9fZ3/image-1785496321794.jpg', bPdf: 'https://drive.google.com/file/d/10dipiVkbI-Y18zuaD0hqwj43LgE3Egp9/view?usp=drivesdk' }, { bTitle: 'তাফসীর ইবনে কাসীর (১৬ খণ্ড)', bImg: 'https://i.ibb.co/ch8K9fZ3/image-1785496321794.jpg', bPdf: 'https://drive.google.com/file/d/1uz5vc9oTtsJopQfJu4l0sGXrWDUvkONM/view?usp=drivesdk' }, { bTitle: 'তাফসীর ইবনে কাসীর (১৭ খণ্ড)', bImg: 'https://i.ibb.co/ch8K9fZ3/image-1785496321794.jpg', bPdf: 'https://drive.google.com/file/d/13951nQtpVyjgq_Wuob8wWPvJ9lzKL02Q/view?usp=drivesdk' }, { bTitle: 'তাফসীর ইবনে কাসীর (১৮ খণ্ড)', bImg: 'https://i.ibb.co/ch8K9fZ3/image-1785496321794.jpg', bPdf: 'https://drive.google.com/file/d/1wzMY8pdvaBrkNXQU1Y486uQNTmW12X9r/view?usp=drivesdk' }, ] },
+        { cName: 'মারেফুল কুরআন', cDesc: 'ইসলামিক ফাউন্ডেশন', cIcon: 'https://files.catbox.moe/1221i5.jpg', books: [ { bTitle: '(১ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(২ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৪ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৫ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৭ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৮ খণ্ড)', bImg: '#', bPdf: '#' }, ] },
+        { cName: 'তাফসীরুল জালালাইন', cDesc: 'ইসলামিক ফাউন্ডেশন', cIcon: 'https://files.catbox.moe/l9hcgx.png', books: [ { bTitle: '(১ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(২ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৪ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৫ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৭ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৮ খণ্ড)', bImg: '#', bPdf: '#' }, ] },
+        { cName: 'তাফসীরে মাযহারী', cDesc: 'ইসলামিক ফাউন্ডেশন', cIcon: 'https://files.catbox.moe/gt11s6.png', books: [ { bTitle: '(১ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(২ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৪ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৫ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৭ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৮ খণ্ড)', bImg: '#', bPdf: '#' }, ] },
+        { cName: 'তাফসীর ইবনে আব্বাস', cDesc: 'ইসলামিক ফাউন্ডেশন', cIcon: '2', books: [ { bTitle: '(১ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(২ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৪ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৫ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৭ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৮ খণ্ড)', bImg: '#', bPdf: '#' }, ] },
+        { cName: 'তাফসীর জাকারিয়া', cDesc: 'ইসলামিক ফাউন্ডেশন', cIcon: 'https://files.catbox.moe/q7bn23.png', books: [ { bTitle: '(১ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(২ খণ্ড)', bImg: '#', bPdf: '#' },    ] },
+        { cName: 'তাফসীরুল কুরআন ৩০ তম পারা', cDesc: 'ইসলামিক ফাউন্ডেশন', cIcon: 'https://files.catbox.moe/ruq82f.jpg', books: [ { bTitle: 'তাফসীরুল কুরআন ৩০ তম পারা', bImg: '#', bPdf: '#' }, ] },
+        { cName: 'তাফসীর তাবারী', cDesc: 'ইসলামিক ফাউন্ডেশন', cIcon: 'https://files.catbox.moe/kko2f9.jpg', books: [ { bTitle: '(১ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(২ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৪ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৫ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৭ খণ্ড)', bImg: '#', bPdf: '#' }, { bTitle: '(৮ খণ্ড)', bImg: '#', bPdf: '#' }, ] },
+    ];
+
+    const dbHistory = [
+        { cName: 'b', cDesc: '#', cIcon: '#', books: [ { bTitle: '( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (৮ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৯ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ১০ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(১১ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(১২ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+    ];
+
+    const dbAqida = [
+        { cName: 'ইমানের শাখা', cDesc: 'কুরআনের তাফসীর', cIcon: 'https://i.ibb.co/ch8K9fZ3/image-1785496321794.jpg', books: [ { bTitle: '( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (৮ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৯ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ১০ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(১১ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(১২ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+         
+    ];
+
+    Aqida2 = [
+        { cName: 'নবীদের জীবন কাহিনী', cDesc: '2', cIcon: '2', books: [ { bTitle: '( ১ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (২ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৩ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ৪ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(৫ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৬ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '( ৭ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: ' (৮ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(৯ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: ' ( ১০ খণ্ড)', bImg: '২', bPdf: '২' }, { bTitle: '(১১ খণ্ড)', bImg: '২', bPdf: '#' }, { bTitle: '(১২ খণ্ড)', bImg: '২', bPdf: '#' }, ] },
+         
+    ];
+
+    function openSubCategory(type) {
+        document.getElementById('main-category-list').style.display = 'none';
+        document.getElementById('sub-list-container').style.display = 'block';
+
+        let titleTxt = "";
+        let dataList = [];
+
+        if(type === 'alem') { titleTxt = "আলেম ক্যাটাগরি"; dataList = dbAlem; }
+        else if(type === 'hadith') { titleTxt = "হাদিস ক্যাটাগরি"; dataList = dbHadith; }
+        else if(type === 'new') { titleTxt = "নতুন বই ক্যাটাগরি"; dataList = dbNew; }
+        else if(type === 'tafsir') { titleTxt = "তাফসীর ক্যাটাগরি"; dataList = dbTafsir; }
+        else if(type === 'history') { titleTxt = "ইতিহাস ও জীবনী"; dataList = dbHistory; }
+        else if(type === 'aqida') { titleTxt = "আকীদা ও ফিকহ"; dataList = dbAqida; }
+        else if(type === 'aqida2') { titleTxt = "নবীদের জীবন কাহিনী"; dataList = Aqida2; }
+
+        document.getElementById('sub-list-title').innerText = titleTxt;
+        let area = document.getElementById('sub-list-render-area');
+        let html = '';
+
+        for(let i=0; i<dataList.length; i++){
+            html += `
+                <div class="list-item" onclick="openBooksList('${type}', ${i})">
+                    <img src="${dataList[i].cIcon}" class="list-thumbnail">
+                    <div class="list-details">
+                        <div class="title">${dataList[i].cName}</div>
+                        <div class="subtitle">${dataList[i].cDesc}</div>
+                    </div>
+                    <i class="fas fa-chevron-right click-icon"></i>
+                </div>`;
+        }
+        area.innerHTML = html;
+    }
+
+    function backToMainCategory() { handleBackButton(); }
+
+    function openBooksList(type, index) {
+        document.getElementById('sub-list-container').style.display = 'none';
+        document.getElementById('books-list-container').style.display = 'block';
+
+        let dataList = [];
+        if(type === 'alem') dataList = dbAlem;
+        else if(type === 'hadith') dataList = dbHadith;
+        else if(type === 'new') dataList = dbNew;
+        else if(type === 'tafsir') dataList = dbTafsir;
+        else if(type === 'history') dataList = dbHistory;
+        else if(type === 'aqida') dataList = dbAqida;
+        else if(type === 'aqida2') dataList = Aqida2;
+
+        let item = dataList[index];
+        document.getElementById('book-author-title').innerText = item.cName;
+        
+        let area = document.getElementById('books-render-area');
+        let html = '';
+
+        if(item.books && item.books.length > 0) {
+            item.books.forEach((b, i) => {
+                let viewUrl = b.bPdf;
+                if(viewUrl.includes('drive.google.com') && viewUrl.includes('/view')) {
+                    viewUrl = viewUrl.replace('/view', '/preview');
+                }
+                
+                let coverImage = (b.bImg && b.bImg !== '#') ? b.bImg : item.cIcon;
+
+                html += `
+                    <div class="list-item" onclick="openPDF('${viewUrl}', '${b.bTitle}')">
+                        <div class="list-number">${i + 1}</div>
+                        <img src="${coverImage}" class="list-thumbnail">
+                        <div class="list-details">
+                            <div class="title">${b.bTitle}</div>
+                            <div class="subtitle">পিডিএফ পড়তে ক্লিক করুন</div>
+                        </div>
+                        <i class="fas fa-book-open click-icon"></i>
+                    </div>`;
+            });
+        }
+        area.innerHTML = html;
+    }
+
+    function backToSubCategory() { handleBackButton(); }
+
+    // =========================================================================
+    // ২. অডিও কুরআন (১১৪ সূরার লিস্ট এবং ৪টি করে লিস্ট)
+    // =========================================================================
+    const quran114List = [
+        { title: '১. সূরা আল-ফাতিহা', subtitle: 'মাক্কী | আয়াত ৭', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/1.%20Surah%20Al-Fatiha.mp3' },
+        { title: '২. সূরা আল-বাকারা', subtitle: 'মাদানী | আয়াত ২৮৬', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/2.%20Surah%20Al-Baqarah.mp3' },
+        { title: '৩. সূরা আলে ইমরান', subtitle: 'মাদানী | আয়াত ২০০', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/3.%20Surah%20Al-Imran.mp3' },
+        { title: '৪. সূরা আন নিসা', subtitle: 'মাদানী | আয়াত ১৭৬', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/4.%20Surah%20An-Nisa.mp3' },
+        { title: '৫. সূরা আল মায়িদা', subtitle: 'মাদানী | আয়াত ১২০', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/5.%20Surah%20Al-Ma%27idah.mp3' },
+        { title: '৬. সূরা আল আনআম', subtitle: 'মাক্কী | আয়াত ১৬৫', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/6.%20Surah%20Al-An%27am.mp3' },
+        { title: '৭. সূরা আল আরাফ', subtitle: 'মাক্কী | আয়াত ২০৬', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/7.%20Surah%20Al-A%27raf.mp3' },
+        { title: '৮. সূরা আল আনফাল', subtitle: 'মাদানী | আয়াত ৭৫', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/8.%20Surah%20Al-Anfal.mp3' },
+        { title: '৯. সূরা আত তাওবাহ', subtitle: 'মাদানী | আয়াত ১২৯', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/9.%20Surah%20At-Tawbah.mp3' },
+        { title: '১০. সূরা ইউনুস', subtitle: 'মাক্কী | আয়াত ১০৯', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/10.%20Surah%20Yunus.mp3' },
+        { title: '১১. সূরা হুদ', subtitle: 'মাক্কী | আয়াত ১২৩', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/11.%20Surah%20Hud.mp3' },
+        { title: '১২. সূরা ইউসুফ', subtitle: 'মাক্কী | আয়াত ১১১', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/12.%20Surah%20Yusuf.mp3' },
+        { title: '১৩. সূরা আর রাদ', subtitle: 'মাদানী | আয়াত ৪৩', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/13.%20Surah%20Ar-Ra%27d.mp3' },
+        { title: '১৪. সূরা ইবরাহীম', subtitle: 'মাক্কী | আয়াত ৫২', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/14.%20Surah%20Ibrahim.mp3' },
+        { title: '১৫. সূরা আল হিজর', subtitle: 'মাক্কী | আয়াত ৯৯', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/15.%20Surah%20Al-Hijr.mp3' },
+        { title: '১৬. সূরা আন নাহল', subtitle: 'মাক্কী | আয়াত ১২৮', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/16.%20Surah%20An-Nahl.mp3' },
+        { title: '১৭. সূরা আল ইসরা', subtitle: 'মাক্কী | আয়াত ১১১', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/17.%20Surah%20Bani%20Isra%27il.mp3' },
+        { title: '১৮. সূরা আল কাহফ', subtitle: 'মাক্কী | আয়াত ১১০', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/18.%20Surah%20Al-Kahf.mp3' },
+        { title: '১৯. সূরা মারইয়াম', subtitle: 'মাক্কী | আয়াত ৯৮', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/19.%20Surah%20Maryam.mp3' },
+        { title: '২০. সূরা ত্বোয়া-হা', subtitle: 'মাক্কী | আয়াত ১৩৫', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/20%20Surah%20Taha.mp3' },
+        { title: '২১. সূরা আল আম্বিয়া', subtitle: 'মাক্কী | আয়াত ১১২', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/21.%20Surah%20Al-Anbiya.mp3' },
+        { title: '২২. সূরা আল হাজ্জ', subtitle: 'মাদানী | আয়াত ৭৮', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/22.%20Surah%20Al-Hajj.mp3' },
+        { title: '২৩. সূরা আল মুমিনুন', subtitle: 'মাক্কী | আয়াত ১১৮', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/23.%20Surah%20Al-Mu%27minun.mp3' },
+        { title: '২৪. সূরা আন নূর', subtitle: 'মাদানী | আয়াত ৬৪', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/24.%20Surah%20An-Nur.mp3' },
+        { title: '২৫. সূরা আল ফুরকান', subtitle: 'মাক্কী | আয়াত ৭৭', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/25.%20Surah%20Al-Furqan.mp3' },
+        { title: '২৬. সূরা আশ শুআরা', subtitle: 'মাক্কী | আয়াত ২২৭', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/26.%20Ash-Shu%27ara.mp3' },
+        { title: '২৭. সূরা আন নামল', subtitle: 'মাক্কী | আয়াত ৯৩', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/27.%20Surah%20An-Naml.mp3' },
+        { title: '২৮. সূরা আল কাসাস', subtitle: 'মাক্কী | আয়াত ৮৮', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/28.%20Surah%20Al-Qasas.mp3' },
+        { title: '২৯. সূরা আল আনকাবুত', subtitle: 'মাক্কী | আয়াত ৬৯', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/29.%20Surah%20Al-Ankabut.mp3' },
+        { title: '৩০. সূরা আর রুম', subtitle: 'মাক্কী | আয়াত ৬০', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/30.%20Surah%20Ar-Rum.mp3' },
+        { title: '৩১. সূরা লুকমান', subtitle: 'মাক্কী | আয়াত ৩৪', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/31.%20Surah%20Luqman.mp3' },
+        { title: '৩২. সূরা আস সাজদাহ', subtitle: 'মাক্কী | আয়াত ৩০', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/32.%20Surah%20As-Sajdah.mp3' },
+        { title: '৩৩. সূরা আল আহযাব', subtitle: 'মাদানী | আয়াত ৭৩', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/33.%20Surah%20Al-Ahzab.mp3' },
+        { title: '৩৪. সূরা সাবা', subtitle: 'মাক্কী | আয়াত ৫৪', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/34.%20Surah%20Saba.mp3' },
+        { title: '৩৫. সূরা ফাতির', subtitle: 'মাক্কী | আয়াত ৪৫', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/35.%20Surah%20Fatir.mp3' },
+        { title: '৩৬. সূরা ইয়াসীন', subtitle: 'মাক্কী | আয়াত ৮৩', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/36.%20Surah%20Yasin.mp3' },
+        { title: '৩৭. সূরা আস ছাফফাত', subtitle: 'মাক্কী | আয়াত ১৮২', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/37.%20Surah%20As-Saffat.mp3' },
+        { title: '৩৮. সূরা ছোয়াদ', subtitle: 'মাক্কী | আয়াত ৮৬', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/38.%20Surah%20Sad.mp3' },
+        { title: '৩৯. সূরা আয যুমার', subtitle: 'মাক্কী | আয়াত ৭৫', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/39.%20Surah%20Az-Zumar.mp3' },
+        { title: '৪০. সূরা গাফির', subtitle: 'মাক্কী | আয়াত ৮৫', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/40.%20Surah%20Al-Mu%27min.mp3' },
+        { title: '৪১. সূরা ফুসসিলাত', subtitle: 'মাক্কী | আয়াত ৫৪', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/41.%20%20Sura%20%20Ha-Meem%20As%20Sajdah.mp3' },
+        { title: '৪২. সূরা আশ শূরা', subtitle: 'মাক্কী | আয়াত ৫৩', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/42.%20Sura%20Ashshura.mp3' },
+        { title: '৪৩. সূরা আয যুখরুফ', subtitle: 'মাক্কী | আয়াত ৮৯', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/43.%20Sura%20Jukhrof.mp3' },
+        { title: '৪৪. সূরা আদ দুখান', subtitle: 'মাক্কী | আয়াত ৫৯', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/44.%20Sura%20Ad%20Dokhan.mp3' },
+        { title: '৪৫. সূরা আল জাসিয়াহ', subtitle: 'মাক্কী | আয়াত ৩৭', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/45.%20%20Sura%20%20Al%20%20Jasiah.mp3' },
+        { title: '৪৬. সূরা আল আহকাফ', subtitle: 'মাক্কী | আয়াত ৩৫', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/46.%20%20Sura%20Al%20Ahqaf.mp3' },
+        { title: '৪৭. সূরা মুহাম্মদ', subtitle: 'মাদানী | আয়াত ৩৮', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/47.%20%20Sura%20%20Mohmmed.mp3' },
+        { title: '৪৮. সূরা আল ফাতহ', subtitle: 'মাদানী | আয়াত ২৯', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/48.%20%20Sura%20%20Al%20Fath.mp3' },
+        { title: '৪৯. সূরা আল হুজুরাত', subtitle: 'মাদানী | আয়াত ১৮', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/49.%20%20Sura%20Hujurat.mp3' },
+        { title: '৫০. সূরা ক্বাফ', subtitle: 'মাক্কী | আয়াত ৪৫', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/50.%20%20Sura%20%20Quaf.mp3' },
+        { title: '৫১. সূরা আয যারিয়াত', subtitle: 'মাক্কী | আয়াত ৬০', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/51.%20%20Sura%20%20Aj%20Jariat.mp3' },
+        { title: '৫২. সূরা আত তূর', subtitle: 'মাক্কী | আয়াত ৪৯', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/52.%20%20Sura%20At%20Toor.mp3' },
+        { title: '৫৩. সূরা আন নাজম', subtitle: 'মাক্কী | আয়াত ৬২', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/53.%20Sura%20An%20Najm.mp3' },
+        { title: '৫৪. সূরা আল ক্বামার', subtitle: 'মাক্কী | আয়াত ৫৫', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/54.%20%20Sura%20Al%20Qamar.mp3' },
+        { title: '৫৫. সূরা আর রাহমান', subtitle: 'মাদানী | আয়াত ৭৮', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/55.%20Sura%20Ar%20%20Rahman.mp3' },
+        { title: '৫৬. সূরা আল ওয়াকিয়াহ', subtitle: 'মাক্কী | আয়াত ৯৬', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/56.%20%20Sura%20Al%20Waqea.mp3' },
+        { title: '৫৭. সূরা আল হাদীদ', subtitle: 'মাদানী | আয়াত ২৯', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/57.%20%20Sura%20Al%20Hadeed.mp3' },
+        { title: '৫৮. সূরা আল মুজাদালাহ', subtitle: 'মাদানী | আয়াত ২২', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/58.%20%20Sura%20Al%20Mojadela.mp3' },
+        { title: '৫৯. সূরা আল হাশর', subtitle: 'মাদানী | আয়াত ২৪', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/59.%20%20Sura%20Al%20Hashr.mp3' },
+        { title: '৬০. সূরা আল মুমতাহিনাহ', subtitle: 'মাদানী | আয়াত ১৩', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/60.%20%20Sura%20Al%20Momtahana.mp3' },
+        { title: '৬১. সূরা আস সাফ', subtitle: 'মাদানী | আয়াত ১৪', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/61.%20Sura%20As%20%20Saf.mp3' },
+        { title: '৬২. সূরা আল জুমুআহ', subtitle: 'মাদানী | আয়াত ১১', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/62.%20%20Sura%20Al%20Jumua.mp3' },
+        { title: '৬৩. সূরা আল মুনাফিকুন', subtitle: 'মাদানী | আয়াত ১১', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/63.%20%20Sura%20Monafeqoon.mp3' },
+        { title: '৬৪. সূরা আত তাগাবুন', subtitle: 'মাদানী | আয়াত ১৮', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/64.%20%20Sura%20At%20Tagabon.mp3' },
+        { title: '৬৫. সূরা আত তালাক', subtitle: 'মাদানী | আয়াত ১২', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/65.%20Sura%20At%20Talaque.mp3' },
+        { title: '৬৬. সূরা আত তাহরীম', subtitle: 'মাদানী | আয়াত ১২', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/66.%20%20Sura%20At%20Tahreem.mp3' },
+        { title: '৬৭. সূরা আল মুলক', subtitle: 'মাক্কী | আয়াত ৩০', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/67.%20Sura%20Al%20Mulk.mp3' },
+        { title: '৬৮. সূরা আল কলম', subtitle: 'মাক্কী | আয়াত ৫২', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/68.%20%20Sura%20Al%20Qalam.mp3' },
+        { title: '৬৯. সূরা আল হাক্কাহ', subtitle: 'মাক্কী | আয়াত ৫২', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/69.%20%20Sura%20%20Al%20Haqqah.mp3' },
+        { title: '৭০. সূরা আল মাআরিজ', subtitle: 'মাক্কী | আয়াত ৪৪', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/70.%20%20Sura%20Al%20Ma%27rej.mp3' },
+        { title: '৭১. সূরা নূহ', subtitle: 'মাক্কী | আয়াত ২৮', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/71.%20Sura%20Nuh.mp3' },
+        { title: '৭২. সূরা আল জিন', subtitle: 'মাক্কী | আয়াত ২৮', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/72.%20Sura%20Al%20Jin.mp3' },
+        { title: '৭৩. সূরা আল মুযযাম্মিল', subtitle: 'মাক্কী | আয়াত ২০', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/73.%20Sura%20Al%20Muzzammel.mp3' },
+        { title: '৭৪. সূরা আল মুদ্দাসসির', subtitle: 'মাক্কী | আয়াত ৫৬', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/74.%20Sura%20Al%20Muddasser.mp3' },
+        { title: '৭৫. সূরা আল কিয়ামাহ', subtitle: 'মাক্কী | আয়াত ৪০', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/75.%20Sura%20Al%20Qeamah.mp3' },
+        { title: '৭৬. সূরা আল ইনসান', subtitle: 'মাদানী | আয়াত ৩১', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/76.%20Sura%20Ad%20Dahr.mp3' },
+        { title: '৭৭. সূরা আল মুরসালাত', subtitle: 'মাক্কী | আয়াত ৫০', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/77.%20Sura%20Al%20Morsalat.mp3' },
+        { title: '৭৮. সূরা আন নাবা', subtitle: 'মাক্কী | আয়াত ৪০', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/78.%20Sura%20Naba.mp3' },
+        { title: '৭৯. সূরা আন নাযিয়াত', subtitle: 'মাক্কী | আয়াত ৪৬', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/79.%20Sura%20An%20Nazeat.mp3' },
+        { title: '৮০. সূরা আবাসা', subtitle: 'মাক্কী | আয়াত ৪২', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/80.%20Sura%20Abasa.mp3' },
+        { title: '৮১. সূরা আত তাকভীর', subtitle: 'মাক্কী | আয়াত ২৯', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/81.%20Sura%20At%20Takweer.mp3' },
+        { title: '৮২. সূরা আল ইনফিতার', subtitle: 'মাক্কী | আয়াত ۱۹', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/82.%20%20Sura%20Al%20Infetar.mp3' },
+        { title: '৮৩. সূরা আল মুতাফফিফীন', subtitle: 'মাক্কী | আয়াত ৩৬', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/83.%20Sura%20Mutaeeffin.mp3' },
+        { title: '৮৪. সূরা আল ইনশিকাক', subtitle: 'মাক্কী | আয়াত ২৫', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/84.%20Sura%20Al%20Insheqaq.mp3' },
+        { title: '৮৫. সূরা আল বুরুজ', subtitle: 'মাক্কী | আয়াত ২২', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/85.%20%20Sura%20Al%20Buruj.mp3' },
+        { title: '৮৬. সূরা আত তারিক', subtitle: 'মাক্কী | আয়াত ১৭', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/86.%20Sura%20At%20Tareq.mp3' },
+        { title: '৮৭. সূরা আল আ\'লা', subtitle: 'মাক্কী | আয়াত ১৯', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/87.%20Sura%20Al%20A%27la.mp3' },
+        { title: '৮৮. সূরা আল গাশিয়াহ', subtitle: 'মাক্কী | আয়াত ২৬', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/88.%20Sura%20Al%20%20Ghshiah.mp3' },
+        { title: '৮৯. সূরা আল ফাজর', subtitle: 'মাক্কী | আয়াত ৩০', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/89.%20Sura%20Al%20Fajar.mp3' },
+        { title: '৯০. সূরা আল বালাদ', subtitle: 'মাক্কী | আয়াত ২০', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/90.%20Sura%20Al%20Balad.mp3' },
+        { title: '৯১. সূরা আশ শামস', subtitle: 'মাক্কী | আয়াত ১৫', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/91.%20Sura%20Ash%20Shams.mp3' },
+        { title: '৯২. সূরা আল লাইল', subtitle: 'মাক্কী | আয়াত ২১', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/92.%20Sura%20Al%20Lail.mp3' },
+        { title: '৯৩. সূরা আদ দুহা', subtitle: 'মাক্কী | আয়াত ১১', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/93.%20Sura%20Ad%20Doha.mp3' },
+        { title: '৯৪. সূরা আল ইনশিরাহ', subtitle: 'মাক্কী | আয়াত ৮', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/94.%20Sura%20Al%20Insherah.mp3' },
+        { title: '৯৫. সূরা আত ত্বীন', subtitle: 'মাক্কী | আয়াত ৮', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/95.%20Sura%20At%20Teen.mp3' },
+        { title: '৯৬. সূরা আল আলাক', subtitle: 'মাক্কী | আয়াত ১৯', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/96.%20Sura%20Al%20Alaque.mp3' },
+        { title: '৯৭. সূরা আল কদর', subtitle: 'মাক্কী | আয়াত ৫', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/97.%20Sura%20Al%20%20Qadar.mp3' },
+        { title: '৯৮. সূরা আল বাইয়্যিনাহ', subtitle: 'মাদানী | আয়াত ৮', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/98.%20Sura%20Al%20Bayenah.mp3' },
+        { title: '৯৯. সূরা আয যিলযাল', subtitle: 'মাদানী | আয়াত ৮', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/99.%20Sura%20Al%20Zelzal.mp3' },
+        { title: '১০০. সূরা আল আদিয়াত', subtitle: 'মাক্কী | আয়াত ১১', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/100.%20Sura%20Al%20%20Adiat.mp3' },
+        { title: '১০১. সূরা আল কারিয়াহ', subtitle: 'মাক্কী | আয়াত ১১', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/101.%20Sura%20Al%20%20Qaria.mp3' },
+        { title: '১০২. সূরা আত তাকাসুর', subtitle: 'মাক্কী | আয়াত ৮', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/102.%20Sura%20At%20Takasur.mp3' },
+        { title: '১০৩. সূরা আল আসর', subtitle: 'মাক্কী | আয়াত ৩', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/103.%20Sura%20Al%20%20Asar.mp3' },
+        { title: '১০৪. সূরা আল হুমাযাহ', subtitle: 'মাক্কী | আয়াত ৯', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/104.%20Sura%20Al%20%20Humazha.mp3' },
+        { title: '১০৫. সূরা আল ফীল', subtitle: 'মাক্কী | আয়াত ৫', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/105.%20Sura%20Al%20%20Feel.mp3' },
+        { title: '১০৬. সূরা কুরাইশ', subtitle: 'মাক্কী | আয়াত ৪', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/106.%20Sura%20%20Al%20%20Qurish.mp3' },
+        { title: '১০৭. সূরা আল মাউন', subtitle: 'মাক্কী | আয়াত ৭', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/107.%20%20Sura%20%20Al%20%20Maun.mp3' },
+        { title: '১০৮. সূরা আল কাওসার', subtitle: 'মাক্কী | আয়াত ৩', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/108.%20%20Sura%20%20Al%20%20Kausar.mp3' },
+        { title: '১০৯. সূরা আল কাফিরুন', subtitle: 'মাক্কী | আয়াত ৬', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/109.%20%20Sura%20%20Al%20%20Kaferoon.mp3' },
+        { title: '১১০. সূরা আন নাসর', subtitle: 'মাদানী | আয়াত ৩', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/110.%20%20Sura%20%20An%20%20Nasr.mp3' },
+        { title: '১১১. সূরা আল লাহাব', subtitle: 'মাক্কী | আয়াত ৫', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/111.%20%20Sura%20%20Al%20%20Lahab.mp3' },
+        { title: '১১২. সূরা আল ইখলাস', subtitle: 'মাক্কী | আয়াত ৪', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/112.%20%20Sura%20%20Al%20%20Ikhlas.mp3' },
+        { title: '১১৩. সূরা আল ফালাক', subtitle: 'মাক্কী | আয়াত ৫', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/113.%20Sura%20Al%20Falaque.mp3' },
+        { title: '১১৪. সূরা আন নাস', subtitle: 'মাক্কী | আয়াত ৬', img: 'https://i.ibb.co/wFwj3F0B/image.png', link1: 'https://archive.org/download/1.-surah-al-fatiha/114.%20Sura%20An%20Nas.mp3' }
+    ];
+
+    const audioDataSources = {
+        'mishary': quran114List,
+        'Afasy': [
+            { title: '১. সূরা আল-ফাতিহা', subtitle: 'মাক্কী | আয়াত ৭', img: 'https://i.ibb.co/VWB2qHvG/download-5.jpg', link1: 'https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/001.mp3' },
+            { title: '২. সূরা আল-বাকারা', subtitle: 'মাদানী | আয়াত ২৮৬', img: 'https://i.ibb.co/VWB2qHvG/download-5.jpg', link1: 'https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/002.mp3' },
+            { title: '৩. সূরা আলে ইমরান', subtitle: 'মাদানী | আয়াত ২০০', img: 'https://i.ibb.co/VWB2qHvG/download-5.jpg', link1: 'https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/003.mp3' },
+            { title: '৪. সূরা আন নিসা', subtitle: 'মাদানী | আয়াত ১৭৬', img: 'https://i.ibb.co/VWB2qHvG/download-5.jpg', link1: 'https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/004.mp3' },
+            { title: '৫. সূরা আল মায়িদা', subtitle: 'মাদানী | আয়াত ১২০', img: 'https://i.ibb.co/VWB2qHvG/download-5.jpg', link1: 'https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/005.mp3' }
+        ],
+        'abdulbasit': [
+            { title: '১. সূরা আল-ফাতিহা', subtitle: 'মাক্কী | আয়াত ৭', img: 'https://files.catbox.moe/i89c2w.jpg', link1: 'https://server7.mp3quran.net/basit/001.mp3' },
+            { title: '২. সূরা আল-বাকারা', subtitle: 'মাদানী | আয়াত ২৮৬', img: 'https://files.catbox.moe/i89c2w.jpg', link1: 'https://server7.mp3quran.net/basit/002.mp3' },
+            { title: '৩. সূরা আলে ইমরান', subtitle: 'মাদানী | আয়াত ২০০', img: 'https://files.catbox.moe/i89c2w.jpg', link1: 'https://server7.mp3quran.net/basit/003.mp3' },
+            { title: '৪. সূরা আন নিসা', subtitle: 'মাদানী | আয়াত ১৭৬', img: 'https://files.catbox.moe/i89c2w.jpg', link1: 'https://server7.mp3quran.net/basit/004.mp3' }
+        ],
+        'maher': [
+            { title: '১. সূরা আল-ফাতিহা', subtitle: 'মাক্কী | আয়াত ৭', img: 'https://files.catbox.moe/wcen05.png', link1: 'https://server14.mp3quran.net/maher/001.mp3' },
+            { title: '২. সূরা আল-বাকারা', subtitle: 'মাদানী | আয়াত ২৮৬', img: 'https://files.catbox.moe/wcen05.png', link1: 'https://server14.mp3quran.net/maher/002.mp3' },
+            { title: '৩. সূরা আলে ইমরান', subtitle: 'মাদানী | আয়াত ২০০', img: 'https://files.catbox.moe/wcen05.png', link1: 'https://server14.mp3quran.net/maher/003.mp3' },
+            { title: '৪. সূরা আন নিসা', subtitle: 'মাদানী | আয়াত ১৭৬', img: 'https://files.catbox.moe/wcen05.png', link1: 'https://server14.mp3quran.net/maher/004.mp3' }
+        ],
+        'minshawi': [
+            { title: '১. সূরা আল-ফাতিহা', subtitle: 'মাক্কী | আয়াত ৭', img: 'https://files.catbox.moe/27e6wx.jpg', link1: 'https://server10.mp3quran.net/minsh/001.mp3' },
+            { title: '২. সূরা আল-বাকারা', subtitle: 'মাদানী | আয়াত ২৮৬', img: 'https://files.catbox.moe/27e6wx.jpg', link1: 'https://server10.mp3quran.net/minsh/002.mp3' },
+            { title: '৩. সূরা আলে ইমরান', subtitle: 'মাদানী | আয়াত ২০০', img: 'https://files.catbox.moe/27e6wx.jpg', link1: 'https://server10.mp3quran.net/minsh/003.mp3' },
+            { title: '৪. সূরা আন নিসা', subtitle: 'মাদানী | আয়াত ১৭৬', img: 'https://files.catbox.moe/27e6wx.jpg', link1: 'https://server10.mp3quran.net/minsh/004.mp3' }
+        ]
+    };
+
+    function openAudioSub(catId, catName) {
+        document.getElementById('audio-main-list').style.display = 'none';
+        document.getElementById('audio-sub-container').style.display = 'block';
+        document.getElementById('reciter-name-display').innerText = catName;
+
+        let area = document.getElementById('audio-render-area');
+        let html = '';
+        currentPlaylist = audioDataSources[catId] || [];
+        currentPlaylist.forEach((track, index) => {
+            html += `
+                <div class="list-item" onclick="selectAndPlayTrack(${index})">
+                    <div class="list-number">${index + 1}</div>
+                    <img src="${track.img}" class="list-thumbnail">
+                    <div class="list-details">
+                        <div class="title">${track.title}</div>
+                        <div class="subtitle">${track.subtitle}</div>
+                    </div>
+                    <i class="fas fa-play-circle click-icon"></i>
+                </div>`;
+        });
+        area.innerHTML = html;
+    }
+
+    function backToAudioMain() { handleBackButton(); }
+
+    let currentPlaylist = [];
+    let currentIndex = 0;
+    const audio = document.getElementById('main-audio');
+    
+    const progressBar = document.getElementById('progress-bar');
+    const currentTimeEl = document.getElementById('current-time');
+    const totalTimeEl = document.getElementById('total-time');
+
+    audio.addEventListener('timeupdate', () => {
+        if (audio.duration) {
+            progressBar.value = (audio.currentTime / audio.duration) * 100;
+            currentTimeEl.textContent = formatTime(audio.currentTime);
+            totalTimeEl.textContent = formatTime(audio.duration);
+        }
+    });
+
+    progressBar.addEventListener('input', (e) => {
+        if (audio.duration) { audio.currentTime = (e.target.value / 100) * audio.duration; }
+    });
+
+    function formatTime(time) {
+        let min = Math.floor(time / 60);
+        let sec = Math.floor(time % 60);
+        return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+    }
+
+    function selectAndPlayTrack(index) {
+        currentIndex = index;
+        playCurrentTrack();
+    }
+
+    function playCurrentTrack() {
+        if(currentPlaylist.length === 0) return;
+        let track = currentPlaylist[currentIndex];
+
+        document.getElementById('mini-title').innerText = track.title;
+        document.getElementById('mini-author').innerText = track.subtitle;
+        document.getElementById('mini-cover').src = track.img;
+        document.getElementById('fp-title').innerText = track.title;
+        document.getElementById('fp-author').innerText = track.subtitle;
+        document.getElementById('fp-cover').src = track.img;
+        
+        document.getElementById('player-popup').classList.add('active');
+
+        audio.src = track.link1;
+        audio.play().then(() => {
+            updatePlayIcons(true);
+            setupMediaSession(track);
+        }).catch(e => {
+            console.log("Audio Play Error:", e);
+            updatePlayIcons(false);
+        });
+    }
+
+    audio.onended = function() {
+        if(currentIndex < currentPlaylist.length - 1) {
+            currentIndex++;
+            playCurrentTrack();
+        }
+    };
+
+    function playNextTrack() {
+        if(currentIndex < currentPlaylist.length - 1) {
+            currentIndex++;
+            playCurrentTrack();
+        }
+    }
+
+    function playPrevTrack() {
+        if(currentIndex > 0) {
+            currentIndex--;
+            playCurrentTrack();
+        }
+    }
+
+    function togglePlay(event) {
+        if(event) event.stopPropagation();
+        if (audio.paused) {
+            audio.play();
+            updatePlayIcons(true);
+            document.getElementById('player-popup').classList.add('active');
+        } else {
+            audio.pause();
+            updatePlayIcons(false);
+            document.getElementById('player-popup').classList.remove('active');
+        }
+    }
+
+    function updatePlayIcons(isPlaying) {
+        const p1 = document.getElementById('play-btn');
+        const p2 = document.getElementById('fp-play-btn');
+        if(isPlaying) {
+            p1.classList.replace('fa-play-circle', 'fa-pause-circle');
+            p2.classList.replace('fa-play-circle', 'fa-pause-circle');
+        } else {
+            p1.classList.replace('fa-pause-circle', 'fa-play-circle');
+            p2.classList.replace('fa-pause-circle', 'fa-play-circle');
+        }
+    }
+
+    function setupMediaSession(track) {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: track.title, artist: track.subtitle, album: 'ইসলামিক বুক',
+                artwork: [{ src: track.img, sizes: '512x512', type: 'image/png' }]
+            });
+            navigator.mediaSession.setActionHandler('play', () => { audio.play(); updatePlayIcons(true); });
+            navigator.mediaSession.setActionHandler('pause', () => { audio.pause(); updatePlayIcons(false); });
+            navigator.mediaSession.setActionHandler('previoustrack', () => playPrevTrack());
+            navigator.mediaSession.setActionHandler('nexttrack', () => playNextTrack());
+        }
+    }
+
+    function openExpandedPlayer() { 
+        if(!document.getElementById('full-player').classList.contains('active')) {
+            document.getElementById('full-player').classList.add('active'); 
+        }
+    }
+    
+    function closeExpandedPlayer(event) { 
+        if(event) event.stopPropagation();
+        handleBackButton(); 
+    }
+
+    // =========================================================================
+    // ৩. লাইভ টিভি চ্যানেল (অটো-হাইড জুম বাটন সহ)
+    // =========================================================================
+    const tvChannels = [
+        { name: "Peace TV Bangla", url: "https://dzkyvlfyge.erbvr.com/PeaceTvBangla/index.m3u8", icon: "https://files.catbox.moe/dk7egq.png" },
+        { name: "islam tv bangla", url: "https://delicate-silence-daf6.skmirajsk1.workers.dev/?https://live-islamtv-bangla.simplestreamcdn.com/out/v1/islamchannel/islamtv-bangla/hls-ts/index_576.m3u8", icon: "https://files.catbox.moe/d97m2u.jpeg" },
+        { name: "Madani TV Bangla", url: "https://streaming.madanichannel.tv/static/streaming-playlists/hls/d3e49b76-ac06-4689-a641-9200445b647f/master.m3u8", icon: "https://files.catbox.moe/wc6e46.jpeg" },
+        { name: "iplus TV", url: "https://5dd3981940faa.streamlock.net/iplustv/iplustv/chunklist_w1396348660.m3u8", icon: "https://files.catbox.moe/vs0mg8.jpg" },
+        { name: "iqra bangla TV", url: "https://cd198.anystream.uk:9092/iqapp/iq53la/chunks.m3u8", icon: "https://files.catbox.moe/6n96ns.jpg" },
+        { name: "Channel win", url: "https://cdn.pishow.tv/ott/live/229/master.m3u8", icon: "https://files.catbox.moe/lk3uqg.png" },
+        { name: "Noor TV UK", url: "data:application/vnd.apple.mpegurl;charset=utf-8,%23EXTM3U%0A%23EXT-X-MEDIA%3ATYPE%3DAUDIO%2CGROUP-ID%3D%22audio%22%2CNAME%3D%22Audio%22%2CDEFAULT%3DYES%2CAUTOSELECT%3DYES%2CURI%3D%22https%3A%2F%2Fsscsott.com%2Fsrt%2Fnoortvuk%2Ftracks-a1%2Findex.fmp4.m3u8%22%0A%23EXT-X-STREAM-INF%3ABANDWIDTH%3D1500000%2CAUDIO%3D%22audio%22%0Ahttps%3A%2F%2Fsscsott.com%2Fsrt%2Fnoortvuk%2Ftracks-v1%2Findex.fmp4.m3u8", icon: "https://files.catbox.moe/1cb0ty.jpg" },
+        { name: "paigham TV urdu", url: "https://sscsott.com/pk/paighamtv/tracks-v1a1/mono.m3u8", icon: "https://files.catbox.moe/cliz8r.png" },
+        { name: "islamtTV urdu", url: "https://delicate-silence-daf6.skmirajsk1.workers.dev/?https://live-islamtv-urdu.simplestreamcdn.com/out/v1/islamchannel/islamtv-urdu/hls-ts/index_576.m3u8", icon: "https://files.catbox.moe/6hdozd.jpg" },
+        { name: "DEEN TV", url: "https://cd198.anystream.uk:9092/iqapp/d33ntv/chunks.m3u8", icon: "https://files.catbox.moe/2wx6hh.jpg" },
+        { name: "ARY QTV", url: "https://delicate-silence-daf6.skmirajsk1.workers.dev/?https://aryqtv.aryzap.com/074ec424519302c9ae32ff7c42b12c89/6aba18ce/v1/0183ea2a0eec0b8ed5941a38bc76/0183ea2a4e470b8ed5aa4d793457/ARYQTVH264_1080p.m3u8", icon: "https://files.catbox.moe/7hchc3.jpg" }
+    ];
+
+    const tvContainer = document.getElementById('channels-container');
+    tvChannels.forEach(ch => {
+        tvContainer.innerHTML += `
+        <div class="channel-card" onclick="playInNewScreen('${ch.url}')">
+            <div class="tv-icon"><img src="${ch.icon}"></div>
+            <div class="channel-name">${ch.name}</div>
+        </div>`;
+    });
+
+    function playInNewScreen(url) {
+        if(!url) return;
+        const playerHTML = `
+        <!DOCTYPE html>
+        <html lang="bn">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+            <title>Live TV Player</title>
+            <style>
+                body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; background: #000; overflow: hidden; font-family: Arial; }
+                video { width: 100%; height: 100%; object-fit: contain; background: #000; outline: none; transition: transform 0.3s ease; }
+                video::-webkit-media-controls-fullscreen-button { display: none !important; }
+                
+                /* জুম বাটন হাইড হওয়ার স্টাইল */
+                #top-controls { 
+                    position: absolute; top: 0; left: 0; width: 100%; padding: 15px 20px; 
+                    display: flex; justify-content: space-between; align-items: flex-start; 
+                    background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); 
+                    z-index: 9999; transition: opacity 0.5s ease; opacity: 1; pointer-events: auto;
+                }
+                
+                .btn { background: rgba(0,0,0,0.7); color: white; border: 1.5px solid white; padding: 8px 15px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
+                #back-btn { border-color: #ff4444; color: #ff4444; }
+                #zoom-btn { border-color: #00ff88; color: #00ff88; min-width: 160px; }
+                #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #00ff88; font-size: 18px; font-weight: bold; }
+            </style>
+        </head>
+        <body>
+            <div id="loading">⏳ লোডিং...</div>
+            <div id="top-controls">
+                <button id="back-btn" class="btn" onclick="window.close()">🔙 ব্যাক</button>
+                <button id="zoom-btn" class="btn" onclick="toggleZoom()">📺 টিভি/ল্যাপটপ সাইজ</button>
+            </div>
+            <video id="tv" controls playsinline preload="auto"></video>
+            <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"><\/script>
+            <script>
+                const video = document.getElementById('tv');
+                const zoomBtn = document.getElementById('zoom-btn');
+                const loading = document.getElementById('loading');
+                const topControls = document.getElementById('top-controls');
+                
+                let hideTimeout;
+
+                // বাটন হাইড ও শো করার লজিক
+                function showControls() {
+                    topControls.style.opacity = '1';
+                    topControls.style.pointerEvents = 'auto';
+                    clearTimeout(hideTimeout);
+                    
+                    // ভিডিও চলতে থাকলে ৩ সেকেন্ড পর অটোমেটিক বাটন হাইড হবে
+                    if (!video.paused) {
+                        hideTimeout = setTimeout(() => {
+                            topControls.style.opacity = '0';
+                            topControls.style.pointerEvents = 'none';
+                        }, 3000); 
+                    }
+                }
+
+                // স্ক্রিনে টাচ করলে বা ক্লিক করলে আবার বাটন দেখা যাবে
+                document.body.addEventListener('click', showControls);
+                document.body.addEventListener('touchstart', showControls);
+                document.body.addEventListener('mousemove', showControls);
+
+                // ভিডিও প্লে হলে টাইমার চালু হবে, পজ করলে বাটন থেকে যাবে
+                video.addEventListener('play', showControls);
+                video.addEventListener('pause', showControls);
+
+                // প্রথমবার লোড হওয়ার সময় টাইমার চালু
+                showControls();
+
+                function makeFullscreenAndRotate() {
+                    const elem = document.documentElement;
+                    if (elem.requestFullscreen) elem.requestFullscreen();
+                    else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+                    if (screen.orientation && screen.orientation.lock) { screen.orientation.lock('landscape').catch(e => {}); }
+                }
+                document.body.addEventListener('click', makeFullscreenAndRotate, {once: true});
+                document.body.addEventListener('touchstart', makeFullscreenAndRotate, {once: true});
+
+                if (Hls.isSupported()) {
+                    const hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+                    hls.loadSource('${url}');
+                    hls.attachMedia(video);
+                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                        loading.style.display = 'none';
+                        video.play().catch(e=>{});
+                    });
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = '${url}';
+                    video.play();
+                    loading.style.display = 'none';
+                }
+
+                let zoomLevel = 0;
+                function toggleZoom() {
+                    zoomLevel++;
+                    if(zoomLevel > 2) zoomLevel = 0;
+                    if (zoomLevel === 0) { video.style.objectFit = 'contain'; video.style.transform = 'scale(1)'; zoomBtn.innerText = '📺 টিভি/ল্যাপটপ সাইজ'; }
+                    else if (zoomLevel === 1) { video.style.objectFit = 'cover'; video.style.transform = 'scale(1)'; zoomBtn.innerText = '📱 মোবাইল সাইজ'; }
+                    else if (zoomLevel === 2) { video.style.objectFit = 'cover'; video.style.transform = 'scale(1.15)'; zoomBtn.innerText = '⛶ এক্সট্রা জুম'; }
+                }
+            <\/script>
+        </body>
+        </html>`;
+        const newWin = window.open();
+        if(newWin) { newWin.document.write(playerHTML); newWin.document.close(); }
+    }
+
+    function openPDF(url, title) {
+        document.getElementById('pdf-viewer-title').innerText = title;
+        document.getElementById('pdf-iframe').src = url;
+        document.getElementById('pdf-viewer-screen').classList.add('active');
+    }
+    function closePDF() { handleBackButton(); }
+</script>
+
+</body>
+</html>
